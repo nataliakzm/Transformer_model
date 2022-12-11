@@ -175,6 +175,14 @@ class CharCorruptionDataset(Dataset):
         ### [part e]: see spec above
 
         ### START CODE HERE
+        input_data, output_data = self.data[idx].split('\t')
+        x = input_data + self.MASK_CHAR + output_data + self.MASK_CHAR
+        x = x + self.PAD_CHAR * (self.block_size - len(x))
+        y = self.PAD_CHAR * (len(input_data) - 1) + x[len(input_data):]
+        x = x[:-1]
+        x = torch.tensor([self.stoi[c] for c in x], dtype=torch.long)
+        y = torch.tensor([self.stoi[c] for c in y], dtype=torch.long)
+        return x, y
         ### END CODE HERE
 
         raise NotImplementedError
