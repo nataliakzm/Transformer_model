@@ -103,8 +103,8 @@ def pretrain(pretrain_dataset, block_size, model):
                     lr_decay=True, warmup_tokens=512 * 20, final_token=200 * len(pretrain_dataset) * block_size,
                     num_workers=4)
     trainer_obj = Trainer(model, pretrain_dataset, None, tconf)
-    trainer_obj.train()
-    torch.save(model.state_dict(), pretrain_dataset)    
+    #trainer_obj.train()
+    #torch.save(model.state_dict(), pretrain_dataset)    
     ### END CODE HERE
     return tconf, trainer_obj
 
