@@ -1,8 +1,6 @@
 """
 Simple training loop; Boilerplate that could apply to any arbitrary neural network,
 so nothing in this file really has anything to do with GPT specifically.
-
-We suggest not changing anything in this file.
 """
 
 import math

@@ -2,7 +2,7 @@
 from functools import wraps
 import sys, signal, os, time, datetime, unittest, importlib.util, argparse, json, traceback
 
-# Check if solutions.py is present.  If they are not, then hidden tests will not be executed.
+# Check if solutions.py is present. If they are not, then hidden tests will not be executed.
 use_solution = importlib.util.find_spec('solution') is not None
 if use_solution:
   import solution
@@ -20,7 +20,7 @@ class graded():
                timeout = 5,
                after_published = False,
                hide_errors = False,
-               student_feedback=None):
+               final_feedback=None):
     self.leaderboard_col_name = leaderboard_col_name
     self.leaderboard_sort_order = leaderboard_sort_order
     self.is_hidden = is_hidden
@@ -28,7 +28,7 @@ class graded():
     self.timeout = timeout
     self.after_published = after_published
     self.hide_errors = hide_errors
-    self.student_feedback = student_feedback
+    self.final_feedback = final_feedback
 
   def __call__(self, func):
     func = timeout_func(self.timeout)(func)
@@ -39,7 +39,7 @@ class graded():
     func.__is_extra_credit__ = self.is_extra_credit
     func.__leaderboard_col_name__ = self.leaderboard_col_name
     func.__leaderboard_sort_order__ = self.leaderboard_sort_order
-    func.__student_feedback__ = self.student_feedback
+    func.__final_feedback__ = self.final_feedback
     @wraps(func)
     def wrapper(*args, **kwargs):
       # Method for storing result of leaderboard after test completes
@@ -56,7 +56,7 @@ class graded():
       set_elapsed(endtime - args[0].starttime)
       if self.is_hidden and not use_solution:
         # SKip the test if it is hidden and the solution is not present
-        # Do this at the end so that the student's code is run and the elapsed time is calculated.
+        # Do this at the end so that the code is run and the elapsed time is calculated.
         args[0].skipTest('Hidden tests are skipped if the solution is not present.')
       return result
     return wrapper
@@ -113,7 +113,7 @@ class GradedTestCase(unittest.TestCase):
 
   def loadWeights(self):
     if os.path.exists('points.json'): path = 'points.json'
-    else: path = '../points.json'
+    else: path = './points.json'
     with open(path) as f:
       self.weights = json.load(f)
 
@@ -149,8 +149,8 @@ class GradedTestCase(unittest.TestCase):
     return getattr(getattr(self, self._testMethodName), '__is_extra_credit__', None)
 
   @property
-  def studentFeedback(self):
-    return getattr(getattr(self, self._testMethodName), '__student_feedback__', None)
+  def finalFeedback(self):
+    return getattr(getattr(self, self._testMethodName), '__final_feedback__', None)
 
   @property
   def timeout(self):
@@ -168,37 +168,37 @@ class GradedTestCase(unittest.TestCase):
   def earned(self, earned):
     self.__earned__ = earned
 
-  def run_with_solution_if_possible(self, submission, func):
+  def run_with_solution_if_possible(self, code, func):
     if use_solution:
       return func(solution)
     else:
-      return func(submission)
+      return func(code)
 
-  def compare_with_solution_or_wait(self, submission, func_name, comp):
+  def compare_with_solution_or_wait(self, code, func_name, comp):
     start = time.perf_counter()
-    ans2 = comp(getattr(submission, func_name))
+    ans2 = comp(getattr(code, func_name))
     end = time.perf_counter()
     if use_solution:
       ans1 = comp(getattr(solution, func_name))
       self.assertEqual(ans1, ans2)
     else:
-      # If not using the solution, double the time to make the student's runtime more realistic
+      # If not using the solution, double the time to make the runtime more realistic
       time.sleep(end-start)
 
 class GradescopeTestResult(unittest.TestResult):
-  """ A test result class that tracks grading parameters for Gradescope.
+  """ A test result class that tracks final parameters.
 
-  It uses the Gradescope specification:
+  It uses the specification:
   { "score": 44.0, // optional, but required if not on each test case below. Overrides total of tests if specified.
     "execution_time": 136, // optional, seconds
-    "output": "Text relevant to the entire submission", // optional
+    "output": "Text relevant to the entire code", // optional
     "visibility": "after_due_date", // Optional visibility setting
     "stdout_visibility": "visible", // Optional stdout visibility setting
     "extra_data": {}, // Optional extra data to be stored
     "tests": // Optional, but required if no top-level score
       [
           {
-              "score": 2.0, // optional, but required if not on top level submission
+              "score": 2.0, // optional, but required if not on top level code
               "max_score": 2.0, // optional
               "name": "Your name here", // optional
               "number": "1.1", // optional (will just be numbered in order of array if no number given)
@@ -207,7 +207,6 @@ class GradescopeTestResult(unittest.TestResult):
               "visibility": "visible", // Optional visibility setting
               "extra_data": {} // Optional extra data to be stored
           },
-          // and more test cases...
       ],
     "leaderboard": // Optional, will set up leaderboards for these values
       [
@@ -218,9 +217,9 @@ class GradescopeTestResult(unittest.TestResult):
   }
 
   Options for the visibility field are:
-  - `hidden`: test case will never be shown to students
+  - `hidden`: test case will never be shown
   - `after_due_date`: test case will be shown after the assignment's due date has passed.
-    If late submission is allowed, then test will be shown only after the late due date.
+    If late code is allowed, then test will be shown only after the late due date.
   - `after_published`: test case will be shown only when the assignment is explicitly published from the "Review Grades" page
   - `visible` (default): test case will always be shown
 
@@ -276,8 +275,8 @@ class GradescopeTestResult(unittest.TestResult):
       'extra_data':{'is_extra_credit':test.isExtraCredit}
     }
     test_result['output'] = ''
-    if test.studentFeedback is not None:
-      test_result['output'] += test.studentFeedback + '\n'
+    if test.finalFeedback is not None:
+      test_result['output'] += test.finalFeedback + '\n'
     if err is not None and not test.hideErrors:
       test_result['output'] += str(err[0]) + ':  '
       test_result['output'] += str(err[1]) + '\n'
@@ -287,10 +286,10 @@ class GradescopeTestResult(unittest.TestResult):
     if test.leaderboardValue is not None:
       self.results['leaderboard'].append({'name':test.leaderboardColName,'value':test.leaderboardValue})
 
-class StudentTestResult(unittest.TestResult):
-  """ A test result class formatted for student viewing.
+class FinalTestResult(unittest.TestResult):
+  """ A test result class formatted for final viewing.
 
-  These results are inteded to be written in a student-readable format to a
+  These results are inteded to be written in a readable format to a
   stream-like object (stdout or a file of some type).
 
   Attributes:
@@ -372,7 +371,7 @@ class CourseTestRunner():
     if gradescope:
       self.resultclass = GradescopeTestResult
     else:
-      self.resultclass = StudentTestResult
+      self.resultclass = FinalTestResult
     self.gradescope = gradescope
 
   def run(self, test):
@@ -391,5 +390,5 @@ class CourseTestRunner():
 
 if __name__ == '__main__':
   assignment = unittest.TestSuite()
-  assignment.addTest(unittest.defaultTestLoader.discover('.', pattern='grader.py'))
+  assignment.addTest(unittest.defaultTestLoader.discover('.', pattern='tester.py'))
   CourseTestRunner(gradescope=True).run(assignment)

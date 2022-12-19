@@ -25,7 +25,7 @@ from torch.nn import functional as F
 import random
 random.seed(0)
 
-from submission import (
+from code import (
     GPT, GPTConfig, CharCorruptionDataset, NameDataset, TrainerConfig, Trainer, 
     evaluate_places, sample, initialize_vanilla_model, initialize_synthesizer_model,
     finetune, pretrain, train
@@ -103,7 +103,6 @@ def main():
     attention_model = attention_model.to(device)
 
     if args['--function'] == "finetune":
-        #TODO: Create new function to handle trainer initialization
         assert args['--finetune_corpus_path'] is not None
         assert args['--writing_params_path'] is not None
         _, trainer_obj = finetune(args['--reading_params_path'], args['--finetune_corpus_path'], pretrain_dataset, block_size, attention_model)

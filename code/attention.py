@@ -86,16 +86,7 @@ class SynthesizerAttention(nn.Module):
         nn.init.uniform_(self.w2,-0.001,0.001)
 
     def forward(self, x, layer_past=None):
-
-        ### TODO:
-        ### [part g]: Write your SynthesizerAttention below.
-        ###   Do not modify __init__().
-        ### Hints:
-        ###   - Paste over the CausalSelfAttention above and modify it minimally.
-        ###   - Consider especially the parameters self.w1, self.w2 and self.b2.
-        ###       How do these map to the matrices in the handout?
-
-        ### START CODE HERE
+        ### SynthesizerAttention below.
         """
         B -> batch_size
         nh -> number of attention heads
@@ -118,6 +109,4 @@ class SynthesizerAttention(nn.Module):
         # output projection
         y = self.resid_drop(self.proj(y))
         return y
-        ### END CODE HERE
-
         #raise NotImplementedError

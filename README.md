@@ -1,106 +1,80 @@
-# XCS224N Revisions
-Repository contents for the previous cohort is in the following branches.
-- `Rev_XCS224N_Sept2019-Mar2021` branch: cohort from Sept. 2019 to March 2021
+# Self-attention, Transformers, Pretraining
 
-# XCS Student Code Repository
-This repository contains all code for your assignment!
-The build tools in this repo can be used to compile a LaTeX submission.
+This is an investigation into Transformer self-attention building blocks, and the effects of pretraining. So, a Transformer model has been trained to attempt to answer simple questions of the form "Where was person [x] born?" – without providing any input text from which to draw the answer.
 
-# What should I submit?
-Take a look at the problem set PDF:
+You can see that these models are able to learn some facts about where people were born through pretraining, and access that information during finne-tuning to answer the questions.
 
-- If it contains any questions requiring written responses, a **written (or
-typeset) PDF document** submission is required (typeset instructions below).
+# Pretrained Transformer models and knowledge access
 
-- If contains any questions requiring coding responses, **assignment5_submission.zip** must be uploaded and submitted to the autograder.
-instructions below). See the A5.pdf file for how to prepare the file.
+Training a Transformer to perform a task involves accessing knowledge about the world – knowledge which isn't provided via the task's training data (at least if you want to generalize outside the training set). It's more or less fails entirely at the task. Here, Transformer is pretrained on Wikipedia text that contains world knowledge, and finetuned on the same knowledge-intensive task that enables the model to access some of the knowledge learned at pretraining time. So, we can see that this enables models to perform considerably above chance on a held out development set.
 
-- Many of our problem sets will require both written (or typeset) AND coding submissions. Good luck!
+This code is a fork of Andrej Karpathy's [minGPT](https://github.com/karpathy/minGPT). It's nicer than most research code since it's relatively simple and transparent. The "GPT" in minGPT refers to the Transformer language model of OpenAI, originally described in [this paper](https://s3-us-west-2.amazonaws.com/openai-assets/research-covers/language-unsupervised/language_understanding_paper.pdf).
 
+# What should I do first?
 
-## How to create a typeset submission using LaTeX
-You are welcome to typeset your submission in any legible format (including
-handwritten).  For those who are trying LaTeX for the first time, consider using
-the following build process (we've tried to streamline it as much as possible
-for you!).  All instructions that follow are for our build process, which will
-require a working installation of [TeX Live](https://www.tug.org/texlive/) (This
-website has installation instructions for Windows, Linux, and Mac).  Most linux
-distributions come pre-loaded with this.  Mac users can download and install it
-from [mactex](https://tug.org/mactex/)
+Review the minGPT demo code:
 
-All LaTeX files are in the `tex/` subdirectory. Your question responses will be
-typed into the file `tex/submission.tex`.  We recommend attempting to compile
-the document before typing anything in `tex/submission.tex`.
+- In the code/mingpt-demo/ folder, there's a Jupyter notebook (play char.ipynb) that trains and samples from a Transformer language model. Some of the code written below was inspired by what you see in this notebook.
 
-Run `make` form the root directory.  Complete `make` documentation is
-provided within the Makefile.  To get started, clone the repository and try out
-a simple `make` command:
-```
-$ make clean -s
-```
+Read through NameDataset in code/dataset.py, the dataset for
+reading name-birth place pairs.
 
-If the command runs correctly, it will remove the assignment PDF from your root
-directory.  Don't worry though!  Try recreating it again using the following
-command:
-```
-$ make without_solutions -s
-```
+- The task on pretrained models is attempting to access the birth place of a notable person, as written in their Wikipedia page. Let's think of this as a particularly simple form of question answering:
+  Q: Where was [person] born?
+  A: [place]
+- In dataset.py, you'll see the the class NameDataset, which reads a TSV file of name/place pairs and produces examples of the above form that is feed to a Transformer model later.
+- To see NameDataset on the training set birth places train.tsv run:
+  cd src/submission
+  python dataset.py namedata
 
-After some file shuffling and a few passes of the LaTeX compiler, you should see
-a fresh new assignment handout in the root directory.  Now try the following
-command:
-```
-$ make with_solutions -s
-```
+Finetuning (without pretraining):
 
-You should now see a `\*_Solutions.pdf` file in your root directory.  This
-contains the content from the original handout as well as your solutions (those
-typed into `tex/submission.tex`)!  If you haven't edited `tex/submission.tex`
-yet, it will probably look a lot like the `without_solutions` version.
+- The Transformer is finetuned on the name/birth place dataset, via examples from the NameDataset class. The hyperparameters for the Trainer are specified in the code/helper.py code.
 
-To see what it looks like with some solution code, open up `tex/submission.tex`
-and enter the following code between the tags `### START CODE HERE ###` and
-`### END CODE HERE ###`:
-```latex
-\begin{answer}
-  % ### START CODE HERE ###
-  \LaTeX
-  % ### END CODE HERE ###
-\end{answer}
-```
+Making first predictions (without pretraining)
 
-Now run the following command:
-```
-$ make -s
-```
+- # Train on the names dataset
 
-This command re-runs the default `make` target, which is, conveniently,
-`make with_solutions`.  Opening the file `\*_Solutions.pdf`, you should see
-something like the following:
+  ./run.sh vanilla_finetune_without_pretrain
 
-<img src="https://render.githubusercontent.com/render/math?math=\LaTeX">
+- # Evaluate on the dev set, writing out predictions
 
-## How to create a typeset submission using LaTeX on Overleaf
-[Overleaf](https://www.overleaf.com/) is an online WYSIWYG editor.  While we
-recommend becoming familiar with compiling LaTeX locally, you may instead prefer
-the ease of Overleaf. Follow these steps to get set up with Overleaf (after
-creating an account for yourself):
+  ./run.sh vanilla_eval_dev_without_pretrain
 
-1. Create a new "Blank Project".
-<img src="README_media/1.png">
-2. Give the project a name.
-3. Delete the file named "main.tex".
-<img src="README_media/3.png">
-4. Upload the following files to your project:
-- "submission.tex"
-- "macros.tex"
-<img src="README_media/4.png">
-5. Open the Overleaf menu at the top left.
-<img src="README_media/5.png">
-6. Change the "Main document" to "submission.tex".
-<img src="README_media/6.png">
-7. Recompile the document.
-<img src="README_media/7.png">
+- # Evaluate on the test set, writing out predictions
+  ./run.sh vanilla_eval_test_without_pretrain
 
-Good luck with the assignment!  Remember that you can always submit organized
-and legible handwritten PDFs instead of typeset documents.
+A span corruption function for pretraining:
+
+- Class CharCorruptionDataset in the file xode/dataset.py is implemented within the getitem () function. Span corruption is explored in the [T5 paper](https://arxiv.org/pdf/1910.10683.pdf). It randomly selects spans of text in a document and replaces them with unique tokens (noising).
+- Models take this noised text, and are required to output a pattern of each unique sentinel followed by the tokens that were replaced by that sentinel in the input.
+- In this example, you can see a simplified option which only masks out a single sequence of characters. To sample a few examples from the CharCorruptionDataset on the pretraining dataset wiki.txt:
+  cd src/submission
+  python dataset.py charcorruption
+
+Pretraining, finetunng, and making final predictions. Takes around 2 hours for training.
+
+- Then the model was pretrained on the span corruption task: specifically on wiki.txt (which took approximately two hours).
+- # Pretrain the model
+
+  ./run.sh vanilla_pretrain
+
+- # Finetune the model
+  ./run.sh vanilla_finetune_with_pretrain
+- # Evaluate on the dev set; write to disk
+  ./run.sh vanilla_eval_dev_with_pretrain
+- # Evaluate on the test set; write to disk
+  ./run.sh vanilla_eval_test_with_pretrain
+
+# The self-attention module
+
+Below are bash commands that your code should support in order to pretrain the model, finetune it, and make predictions on the dev and test sets. Note that the pretraining process will take approximately 2 hours.
+
+- # Pretrain the model
+  ./run.sh synthesizer_pretrain
+- # Finetune the model
+  ./run.sh synthesizer_finetune_with_pretrain
+- # Evaluate on the dev set; write to disk
+  ./run.sh synthesizer_eval_dev_with_pretrain
+- # Evaluate on the test set; write to disk
+  ./run.sh synthesizer_eval_test_with_pretrain

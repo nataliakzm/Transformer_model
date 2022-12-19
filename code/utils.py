@@ -1,6 +1,4 @@
-""" Utilities; we suggest changing none of these functions
-
-but feel free to add your own.
+""" Utilities
 """
 
 import random
@@ -48,7 +46,6 @@ def sample(model, x, steps, temperature=1.0, sample=False, top_k=None):
             _, ix = torch.topk(probs, k=1, dim=-1)
         # append to the sequence and continue
         x = torch.cat((x, ix), dim=1)
-
     return x
 
 
@@ -65,7 +62,7 @@ def evaluate_places(filepath, predicted_places):
   with open(filepath, encoding='utf-8') as fin:
     lines = [x.strip().split('\t') for x in fin]
     if len(lines[0]) == 1:
-      print('!!! No ground truth is provided, this will be done on the autograder, returning (0,0)')
+      print('!!! No ground truth is provided, this will be done on the tester, returning (0,0)')
       return (0,0)
     true_places = [x[1] for x in lines]
     total = len(true_places)
