@@ -14,23 +14,27 @@ This code is a fork of **Andrej Karpathy's** [**minGPT**](https://github.com/kar
 
 ### Review the minGPT demo code:
 
-In the * code/mingpt-demo/*  folder, there's a Jupyter notebook (*play char.ipynb*) that trains and samples from a Transformer language model. Some of the code written below was inspired by what you see in this notebook.
+In the *code/mingpt-demo/*  folder, there's a Jupyter notebook (*play char.ipynb*) that trains and samples from a Transformer language model. Some of the code written below was inspired by what you see in this notebook.
 
-###Read through NameDataset in code/dataset.py, the dataset for reading name-birth place pairs.
+### Read through NameDataset in code/dataset.py, the dataset for reading name-birth place pairs.
 
 The task on pretrained models is attempting to access the birth place of a notable person, as written in their Wikipedia page. Let's think of this as a particularly simple form of question answering:
+
   *Q: Where was [person] born?
+  
   A: [place]*
   
 In *dataset.py*, you'll see the the class `NameDataset`, which reads a TSV file of name/place pairs and produces examples of the above form that is feed to a Transformer model later.
 
 To see `NameDataset` on the training set birth places train.tsv run:
+
  ` cd src/submission`
+ 
   `python dataset.py namedata`
 
 ### Finetuning (without pretraining):
 
-- The Transformer is finetuned on the name/birth place dataset, via examples from the `NameDataset` class. The hyperparameters for the Trainer are specified in the code/helper.py code.
+- The Transformer is finetuned on the name/birth place dataset, via examples from the `NameDataset` class. The hyperparameters for the Trainer are specified in the _code/helper.py_ code.
 
 ### Making first predictions (without pretraining)
 
