@@ -28,9 +28,10 @@ In *dataset.py*, you'll see the the class `NameDataset`, which reads a TSV file 
 
 To see `NameDataset` on the training set birth places train.tsv run:
 
- ` cd src/submission`
- 
-  `python dataset.py namedata`
+ ```bash
+ cd src/submission
+ python dataset.py namedata
+ ```
 
 ### Finetuning (without pretraining):
 
